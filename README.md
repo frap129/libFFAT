@@ -1,5 +1,13 @@
+libFFAT
+=======
+libFFAT is a FUSE FAT implementation turned into a shared library. 
+The purpose of this project is to make it easy to create FAT-derivative 
+filesystems for experimentation and education.
+
+Original README from aroulin
+
 FAT32-FS-Driver
-===============
+---------------
 
 Operating Systems Assignment 3
 

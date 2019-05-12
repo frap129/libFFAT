@@ -1,6 +1,6 @@
 // vim: noet:ts=8:sts=8
-#ifndef VFAT_H
-#define VFAT_H
+#ifndef FFAT_H
+#define FFAT_H
 
 #include <sys/types.h>
 
@@ -61,15 +61,31 @@ struct fat32_direntry {
 	/*28*/	uint32_t	size;
 } __attribute__ ((__packed__));
 
+// A kitchen sink for all important data about filesystem
+struct ffat_data {
+	const char	*dev;
+	int		fs;
+	struct fat_boot  fat_boot;
+	/* XXX add your code here */
+	uint32_t root_cluster;
+};
+
+// Used by ffat_search_entry()
+struct ffat_search_data {
+	const char	*name;
+	int		found;
+	struct stat	*st;
+};
+
 #define ATTR_READ_ONLY 0x01
 #define ATTR_HIDDEN 0x02
 #define ATTR_SYSTEM 0x04
 #define ATTR_VOLUME_ID 0x08
 #define ATTR_DIRECTORY 0x10
 #define ATTR_ARCHIVE 0x20
-#define VFAT_ATTR_LFN 0xf
+#define FFAT_ATTR_LFN 0xf
 #define ATTR_LONG_NAME (ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
-#define VFAT_ATTR_INVAL (0x80|0x40|0x08)
+#define FFAT_ATTR_INVAL (0x80|0x40|0x08)
 
 struct fat32_direntry_long {
 	/* 0*/	uint8_t		seq;
@@ -82,13 +98,26 @@ struct fat32_direntry_long {
 	/*28*/	uint16_t	name3[2];
 } __attribute__ ((__packed__));
 
-#define VFAT_LFN_SEQ_START	0x40
-#define VFAT_LFN_SEQ_DELETED	0x80
-#define VFAT_LFN_SEQ_MASK	0x3f
+#define FFAT_LFN_SEQ_START	0x40
+#define FFAT_LFN_SEQ_DELETED	0x80
+#define FFAT_LFN_SEQ_MASK	0x3f
 
-#endif
 void seek_cluster(uint32_t cluster_no);
 static int read_cluster(uint32_t cluster_no, fuse_fill_dir_t filler, void *fillerdata,bool first_cluster);
 char* getfilename(char* nameext, char* filename);
 uint32_t next_cluster(uint32_t cluster_no);
 void setStat(struct fat32_direntry dir_entry, char* buffer, fuse_fill_dir_t filler, void *fillerdata, uint32_t cluster_no);
+static void ffat_init(const char *dev);
+unsigned char chkSum (unsigned char *pFcbName);
+time_t conv_time(uint16_t date_entry, uint16_t time_entry);
+static int ffat_readdir(uint32_t cluster_no, fuse_fill_dir_t filler, void *fillerdata);
+static int ffat_search_entry(void *data, const char *name, const struct stat *st, off_t offs);
+static int ffat_resolve(const char *path, struct stat *st);
+static int ffat_fuse_getattr(const char *path, struct stat *st);
+static int ffat_fuse_readdir(const char *path, void *buf,
+            fuse_fill_dir_t filler, off_t offs, struct fuse_file_info *fi);
+static int ffat_fuse_read(const char *path, char *buf, size_t size, off_t offs,
+            struct fuse_file_info *fi);
+static int ffat_opt_args(void *data, const char *arg, int key, struct fuse_args *oargs);
+void int_handler(int sig);
+#endif
